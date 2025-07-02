@@ -6,7 +6,7 @@
         },
         {
             "name": "individual",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-individual_py.git@mw-changes"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-individual_py.git@develop"
         },
         {
             "name": "workflow",
