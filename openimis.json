@@ -22,7 +22,7 @@
         },
         {
             "name": "location",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-location_py.git@develop#egg=openimis-be-location"
+            "pip": "git+https://github.com/openimis/openimis-be-location_py.git@develop#egg=openimis-be-location"
         },
         {
             "name": "medical",
@@ -134,7 +134,7 @@
         },
         {
             "name": "social_protection",
-            "pip": "git+https://github.com/openimis/openimis-be-social_protection_py.git@develop#egg=openimis-be-social_protection"
+            "pip": "git+https://github.com/openimis/openimis-be-social_protection_py.git@feature/project-beneficiaries#egg=openimis-be-social_protection"
         },
         {
             "name": "opensearch_reports",
