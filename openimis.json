@@ -158,7 +158,7 @@
         },
         {
             "name": "grievance_social_protection",
-            "pip": "git+https://github.com/openimis/openimis-be-grievance_social_protection_py.git@develop#egg=openimis-be-grievance_social_protection"
+            "pip": "git+https://github.com/openimis-wb/openimis-be-grievance_social_protection_py.git@Allow-grievance-case-to-be-limited-access-to-specific-user-roles-per-config"
         },
         {
             "name": "claim_sampling",
