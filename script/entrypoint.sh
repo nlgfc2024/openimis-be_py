@@ -36,6 +36,8 @@ case "$1" in
     OPENIMIS_CONF=../openimis-dev.json python server.py 
   ;;
   "start" )
+    python manage.py compilemessages -x zh_Hans
+    python manage.py collectstatic --clear --noinput
     echo "Starting Django..."
     python server.py
   ;;

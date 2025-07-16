@@ -3,7 +3,9 @@ ENV PYTHONUNBUFFERED 1
 ARG DB_DEFAULT
 
 # System dependencies
-RUN apt-get update && apt-get install -y \
+RUN sed -i 's|http://deb.debian.org/debian|http://archive.debian.org/debian|g' /etc/apt/sources.list \
+ && sed -i 's|http://deb.debian.org/debian-security|http://archive.debian.org/debian-security|g' /etc/apt/sources.list \
+ && apt-get update && apt-get install -y \
     apt-transport-https \
     ca-certificates \
     gettext \
@@ -47,8 +49,8 @@ RUN python modules-requirements.py ../openimis.json > modules-requirements.txt &
 
 # Collect static assets and messages
 WORKDIR /openimis-be/openIMIS
-RUN NO_DATABASE=True python manage.py compilemessages -x zh_Hans
-RUN NO_DATABASE=True python manage.py collectstatic --clear --noinput
+# RUN NO_DATABASE=True python manage.py compilemessages -x zh_Hans
+# RUN NO_DATABASE=True python manage.py collectstatic --clear --noinput
 
 # Entrypoint
 ENTRYPOINT ["/bin/bash", "/openimis-be/script/entrypoint.sh"]
