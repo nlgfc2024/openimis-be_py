@@ -22,7 +22,7 @@
         },
         {
             "name": "location",
-            "pip": "git+https://github.com/openimis/openimis-be-location_py.git@develop#egg=openimis-be-location"
+            "pip": "git+https://github.com/openimis/openimis-be-location_py.git@fix/allowed"
         },
         {
             "name": "medical",
