@@ -43,10 +43,10 @@ jobs:
     name: Build Backend
     runs-on: ubuntu-24.04
     steps:
-      - name: Set up Python 3.10
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Pull openIMIS Backend
         run: |
@@ -179,10 +179,10 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     steps:
-      - name: Set up Python 3.10
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Download site-packages artifact
         uses: actions/download-artifact@v4
@@ -240,7 +240,8 @@ jobs:
           #DJANGO_SETTINGS_MODULE: hat.settings
           DB_HOST: localhost
           DB_PORT: 5432
-          DB_NAME: imis
+          DB_NAME: test_imis
+          DB_TEST_NAME: test_imis
           DB_USER: postgres
           DB_PASSWORD: YourStrong!Passw0rd
           #DEV_SERVER: true
@@ -271,10 +272,10 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     steps:
-      - name: Set up Python 3.10
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Download site-packages artifact
         uses: actions/download-artifact@v4
@@ -299,7 +300,6 @@ jobs:
           sudo tar -xzf /tmp/openimis.tar.gz -C .
       - name: Initialize PSQL
         run: |
-          export DB_NAME_TEST="test_$DB_NAME"
           if [ ${GITHUB_REF##*/} = "main" ]; then export DBBRANCH="main"; else export DBBRANCH="develop"; fi
           echo "Branch ${GITHUB_REF##*/}, usign ${DBBRANCH} branch for database"
           git clone  --depth=1 --branch=$DBBRANCH https://github.com/openimis/database_postgresql.git ./sql_psql
@@ -309,7 +309,8 @@ jobs:
         env:
           DB_HOST: localhost
           DB_PORT: 5432
-          DB_NAME: imis
+          DB_NAME: test_imis
+          DB_TEST_NAME: test_imis
           DB_USER: postgres
           DB_PASSWORD: YourStrong!Passw0rd
       
@@ -333,7 +334,8 @@ jobs:
           #DJANGO_SETTINGS_MODULE: hat.settings
           DB_HOST: localhost
           DB_PORT: 5432
-          DB_NAME: imis
+          DB_NAME: test_imis
+          DB_TEST_NAME: test_imis
           DB_USER: postgres
           DB_PASSWORD: YourStrong!Passw0rd
           #DEV_SERVER: true
@@ -369,10 +371,10 @@ jobs:
     runs-on: ubuntu-24.04
     needs: build_backend
     steps:
-      - name: Set up Python 3.10
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - name: Download site-packages artifact
         uses: actions/download-artifact@v4
         with:
@@ -422,7 +424,7 @@ jobs:
   #     SONAR_ORGANIZATION: ${{ inputs.SONAR_ORGANIZATION }}
   #     SONAR_PROJECT_NAME: ${{ inputs.SONAR_PROJECT_NAME }}
   #     SONAR_PROJECT_VERSION: ${{ inputs.SONAR_PROJECT_VERSION }}
-  #     SONAR_PYTHON_VERSION: '3.10'
+  #     SONAR_PYTHON_VERSION: '3.11'
   #     SONAR_FLAKE8_REPORT_PATHS: ../report/flake8-report.txt
   #     SONAR_SOURCES: ${{ inputs.SONAR_SOURCES }}
   #   steps:
@@ -474,7 +476,7 @@ jobs:
   #           -Dsonar.organization=${{ inputs.SONAR_ORGANIZATION }}
   #           -Dsonar.projectName=${{ inputs.SONAR_PROJECT_NAME }}
   #           -Dsonar.projectVersion=${{ env.SONAR_PROJECT_VERSION }}
-  #           -Dsonar.python.version=3.10
+  #           -Dsonar.python.version=3.11
   #           -Dsonar.sources=current-module
   #           -Dsonar.python.coverage.reportPaths=report/coverage1.xml,report/coverage2.xml
   #           -Dsonar.python.flake8.reportPaths=report/flake8-report.txt
