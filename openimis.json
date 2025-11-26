@@ -6,7 +6,7 @@
         },
         {
             "name": "individual",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-individual_py.git@develop"
+            "pip": "git+https://github.com/openimis/openimis-be-individual_py.git@develop"
         },
         {
             "name": "workflow",
@@ -22,7 +22,7 @@
         },
         {
             "name": "location",
-            "pip": "git+https://github.com/openimis/openimis-be-location_py.git@fix/allowed"
+            "pip": "git+https://github.com/openimis/openimis-be-location_py.git@develop"
         },
         {
             "name": "medical",
