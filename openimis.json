@@ -66,7 +66,7 @@
         },
         {
             "name": "tools",
-            "pip": "git+https://github.com/openimis/openimis-be-tools_py.git@develop#egg=openimis-be-tools"
+            "pip": "git+https://github.com/openimis/openimis-be-tools_py.git@fix/pyminizip-mac-incompatibility"
         },
         {
             "name": "api_fhir_r4",
@@ -158,7 +158,7 @@
         },
         {
             "name": "grievance_social_protection",
-            "pip": "git+https://github.com/openimis-wb/openimis-be-grievance_social_protection_py.git@Allow-grievance-case-to-be-limited-access-to-specific-user-roles-per-config"
+            "pip": "git+https://github.com/openimis/openimis-be-grievance_social_protection_py.git@develop"
         },
         {
             "name": "claim_sampling",
