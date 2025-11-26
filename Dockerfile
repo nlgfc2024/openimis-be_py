@@ -3,9 +3,7 @@ ENV PYTHONUNBUFFERED 1
 ARG DB_DEFAULT
 
 # System dependencies
-RUN sed -i 's|http://deb.debian.org/debian|http://archive.debian.org/debian|g' /etc/apt/sources.list \
- && sed -i 's|http://deb.debian.org/debian-security|http://archive.debian.org/debian-security|g' /etc/apt/sources.list \
- && apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y \
     apt-transport-https \
     ca-certificates \
     gettext \
