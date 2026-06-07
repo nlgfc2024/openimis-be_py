@@ -28,3 +28,8 @@ CORS_ALLOW_CREDENTIALS = True
 # Dev cookies
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
+
+# Trusted origins for CSRF (needed for the Django admin login over HTTPS, since the
+# admin LoginView enforces csrf_protect even though the global CSRF middleware is removed
+# above). Driven by the CSRF_TRUSTED_ORIGINS env var (comma-separated, scheme required).
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()]
