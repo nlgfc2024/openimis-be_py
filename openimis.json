@@ -6,7 +6,7 @@
         },
         {
             "name": "individual",
-            "pip": "git+https://github.com/openimis/openimis-be-individual_py.git@release/26.04"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-individual_py.git@sprint/2026-07"
         },
         {
             "name": "workflow",
@@ -22,7 +22,7 @@
         },
         {
             "name": "location",
-            "pip": "git+https://github.com/openimis/openimis-be-location_py.git@release/26.04"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-location_py.git@sprint/2026-07"
         },
         {
             "name": "medical",
@@ -129,12 +129,12 @@
             "pip": "git+https://github.com/openimis/openimis-be-im_export_py.git@release/26.04#egg=openimis-be-im_export"
         },
         {
-            "name": "dhis2_etl",
-            "pip": "git+https://github.com/openimis/openimis-be-dhis2_etl_py.git@release/26.04#egg=openimis-be-dhis2_etl"
+            "name": "social_protection",
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-social_protection_py.git@sprint/2026-07#egg=openimis-be-social_protection"
         },
         {
-            "name": "social_protection",
-            "pip": "git+https://github.com/openimis/openimis-be-social_protection_py.git@release/26.04#egg=openimis-be-social_protection"
+            "name": "project_social_protection",
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-project_social_protection_py.git@sprint/2026-07/malawi#egg=openimis-be-project_social_protection"
         },
         {
             "name": "opensearch_reports",
@@ -150,7 +150,7 @@
         },
         {
             "name": "calcrule_timesheet",
-            "pip": "git+https://github.com/openimis/openimis-be-calcrule_timesheet_py.git@release/26.04#egg=openimis-be-calcrule_timesheet"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-calcrule_timesheet_py.git@sprint/2026-07#egg=openimis-be-calcrule_timesheet"
         },
         {
             "name": "payroll",
@@ -173,8 +173,12 @@
             "pip": "git+https://github.com/openimis/openimis-be-deduplication_py.git@release/26.04#egg=openimis-be-deduplication"
         },
         {
-            "name": "api_etl",
-            "pip": "git+https://github.com/openimis-wb/openimis-be-api_etl_py.git@ubr#egg=openimis-be-api_etl"
+            "name": "msr_etl",
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-msr_etl_py.git@sprint/2026-07#egg=openimis-be-msr_etl"
+        },
+        {
+            "name": "household_validation",
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-household_validation_py.git@sprint/2026-07#egg=openimis-be-household_validation"
         }
     ]
 }
