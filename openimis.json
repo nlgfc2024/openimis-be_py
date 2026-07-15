@@ -134,7 +134,7 @@
         },
         {
             "name": "project_social_protection",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-project_social_protection_py.git@sprint/2026-07/malawi#egg=openimis-be-project_social_protection"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-project_social_protection_py.git@sprint/2026-07#egg=openimis-be-project_social_protection"
         },
         {
             "name": "opensearch_reports",
