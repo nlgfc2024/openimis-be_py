@@ -1,7 +1,10 @@
 # settings/dev.py
 import os
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = os.environ.get(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.console.EmailBackend",
+)
 # TODO To be check if CSRF can be activated back for dev
 # ALLOWED_HOSTS = ['*']
 # CSRF_TRUSTED_ORIGINS = [
