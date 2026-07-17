@@ -36,9 +36,13 @@ def SITE_URL():
 
 
 SITE_FRONT = os.environ.get("SITE_FRONT", "front")
-FRONTEND_URL = (
-    'https://' if 'https' in os.environ.get("PROTOS", '') else 'http://'
-    ) + SITE_URL() + '/' + SITE_FRONT
+_frontend_url = os.environ.get("FRONTEND_URL")
+_site_url = SITE_URL()
+FRONTEND_URL = _frontend_url or (
+    (
+        'https://' if 'https' in os.environ.get("PROTOS", '') else 'http://'
+    ) + _site_url + '/' + SITE_FRONT if _site_url else f"http://localhost:3000/{SITE_FRONT}"
+)
 
 # Application definition
 
@@ -202,14 +206,19 @@ ASGI_APPLICATION = "openIMIS.asgi.application"
 
 
 # Django email settings
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "localhost")
 EMAIL_PORT = os.environ.get("EMAIL_PORT", "1025")
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
-EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", False)
-EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", False)
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "False").lower() == "true"
+EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "False").lower() == "true"
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "webmaster@localhost")
+
+# Password reset email rate limiting
+PASSWORD_RESET_RATE_LIMIT_WINDOW = int(os.environ.get("PASSWORD_RESET_RATE_LIMIT_WINDOW", 3600))
+PASSWORD_RESET_RATE_LIMIT_PER_IP = int(os.environ.get("PASSWORD_RESET_RATE_LIMIT_PER_IP", 5))
+PASSWORD_RESET_RATE_LIMIT_PER_ACCOUNT = int(os.environ.get("PASSWORD_RESET_RATE_LIMIT_PER_ACCOUNT", 3))
 
 # By default, the maximum upload size is 2.5Mb, which is a bit short for base64 picture upload
 DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('DATA_UPLOAD_MAX_MEMORY_SIZE', 10 * 1024 * 1024))
-
