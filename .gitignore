@@ -27,3 +27,6 @@ openimis-dev.json
 
 # Ensure all files in runConfigurations are included
 !.idea/runConfigurations/*
+# Local password-expiry notes
+openIMIS/PASSWORD_EXPIRY_IMPLEMENTATION.md
+openIMIS/PASSWORD_EXPIRY_TESTING.md
