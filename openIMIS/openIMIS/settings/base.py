@@ -39,7 +39,6 @@ def SITE_URL():
     else:
         return url
 
-###########
 SITE_FRONT = os.environ.get("SITE_FRONT", "front")
 
 _default_frontend_url = (
@@ -53,7 +52,6 @@ FRONTEND_URL = os.environ.get(
     "FRONTEND_URL",
     _default_frontend_url,
 ).rstrip("/")
-#######
 
 # Application definition
 
@@ -248,7 +246,6 @@ PASSWORD_RESET_RATE_LIMIT_PER_IP = int(
 PASSWORD_RESET_RATE_LIMIT_PER_ACCOUNT = int(
     os.environ.get("PASSWORD_RESET_RATE_LIMIT_PER_ACCOUNT", "3")
 )
-####################
 
 # By default, the maximum upload size is 2.5Mb, which is a bit short for base64 picture upload
 DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('DATA_UPLOAD_MAX_MEMORY_SIZE', 10 * 1024 * 1024))
