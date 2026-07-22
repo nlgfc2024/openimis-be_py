@@ -170,7 +170,7 @@
         },
         {
             "name": "deduplication",
-            "pip": "git+https://github.com/openimis/openimis-be-deduplication_py.git@release/26.04#egg=openimis-be-deduplication"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-deduplication_py.git@sprint/2026-07#egg=openimis-be-deduplication"
         },
         {
             "name": "msr_etl",
