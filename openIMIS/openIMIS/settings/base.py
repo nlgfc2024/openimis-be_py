@@ -11,9 +11,15 @@ from datetime import timedelta
 from .common import DEBUG, BASE_DIR, MODE
 from .security import REMOTE_USER_AUTHENTICATION
 
+# helper function to read boolean values from environment variables
+def env_bool(name, default=False):
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
 # Makes openimis_apps available to other modules
 OPENIMIS_APPS = openimis_apps()
-
 
 def SITE_ROOT():
     root = os.environ.get("SITE_ROOT", "")
@@ -24,7 +30,6 @@ def SITE_ROOT():
     else:
         return "%s/" % root
 
-
 def SITE_URL():
     url = os.environ.get("SITE_URL", "")
     if url == "":
@@ -34,11 +39,19 @@ def SITE_URL():
     else:
         return url
 
-
 SITE_FRONT = os.environ.get("SITE_FRONT", "front")
-FRONTEND_URL = (
-    'https://' if 'https' in os.environ.get("PROTOS", '') else 'http://'
-    ) + SITE_URL() + '/' + SITE_FRONT
+
+_default_frontend_url = (
+    ("https://" if "https" in os.environ.get("PROTOS", "") else "http://")
+    + SITE_URL()
+    + "/"
+    + SITE_FRONT
+)
+
+FRONTEND_URL = os.environ.get(
+    "FRONTEND_URL",
+    _default_frontend_url,
+).rstrip("/")
 
 # Application definition
 
@@ -202,13 +215,37 @@ ASGI_APPLICATION = "openIMIS.asgi.application"
 
 
 # Django email settings
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_BACKEND = os.environ.get(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.smtp.EmailBackend",
+)
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "localhost")
-EMAIL_PORT = os.environ.get("EMAIL_PORT", "1025")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "1025"))
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
-EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", False)
-EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", False)
+EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", False)
+EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", False)
+DEFAULT_FROM_EMAIL = os.environ.get(
+    "DEFAULT_FROM_EMAIL",
+    EMAIL_HOST_USER or "no-reply@localhost",
+)
+EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", "10"))
+
+# Reset links expire after one hour.
+PASSWORD_RESET_TIMEOUT = int(
+    os.environ.get("PASSWORD_RESET_TIMEOUT", "3600")
+)
+
+# Dedicated reset-request limits.
+PASSWORD_RESET_RATE_LIMIT_WINDOW = int(
+    os.environ.get("PASSWORD_RESET_RATE_LIMIT_WINDOW", "900")
+)
+PASSWORD_RESET_RATE_LIMIT_PER_IP = int(
+    os.environ.get("PASSWORD_RESET_RATE_LIMIT_PER_IP", "10")
+)
+PASSWORD_RESET_RATE_LIMIT_PER_ACCOUNT = int(
+    os.environ.get("PASSWORD_RESET_RATE_LIMIT_PER_ACCOUNT", "3")
+)
 
 # By default, the maximum upload size is 2.5Mb, which is a bit short for base64 picture upload
 DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get('DATA_UPLOAD_MAX_MEMORY_SIZE', 10 * 1024 * 1024))
