@@ -44,6 +44,7 @@ GRAPHQL_JWT = {
     # This can be used to expose some resources without authentication
     "JWT_ALLOW_ANY_CLASSES": [
         "graphql_jwt.mutations.ObtainJSONWebToken",
+        "core.schema.OpenimisObtainJSONWebToken",
         "graphql_jwt.mutations.Verify",
         "graphql_jwt.mutations.Refresh",
         "graphql_jwt.mutations.Revoke",
