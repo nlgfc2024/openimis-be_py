@@ -24,6 +24,7 @@ show_help() {
   ---------------------------------------------------------------
 
   start            : start django
+  scheduler        : run apscheduler as a dedicated single process
   worker           : start Celery worker
   start_asgi       : use daphne -b ASGI_IP:WSGI_PORT -p SERVER_PORT  ASGI_APPLICATION
   start_wsgi       : use gunicorn -b WSGI_IP:WSGI_PORT -w WSGI_WORKERS WSGI_APPLICATION
@@ -121,6 +122,11 @@ case "$1" in
     SERVER_WORKERS="${WSGI_WORKERS:-4}"
 
     gunicorn -b "$SERVER_IP:$SERVER_PORT" -w $SERVER_WORKERS "$SERVER_APPLICATION"
+  ;;
+  "scheduler" )
+    echo "Starting dedicated APScheduler process..."
+    cd /openimis-be/openIMIS
+    ./manage.py runapscheduler
   ;;
   "worker" )
     echo "Starting Celery with url ${CELERY_BROKER_URL} ${DB_NAME}..."
