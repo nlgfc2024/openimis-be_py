@@ -39,7 +39,14 @@ jobs:
         run: curl -o ./openimis.json "${{ inputs.file_url }}"
 
       - name: Build and push the backend image
+        env:
+          RAW_TAG: ${{ inputs.tag }}
         run: |
           IMAGE=ghcr.io/nlgfc2024/openimis-be
-          docker build . --tag "${IMAGE}:${{ inputs.tag }}"
-          docker push "${IMAGE}:${{ inputs.tag }}"
+          # A Docker/OCI tag allows only [A-Za-z0-9_.-], no leading '.'/'-', max 128 chars.
+          # Sanitise the input so e.g. "mw-develop:latest" -> "mw-develop-latest".
+          TAG=$(printf '%s' "$RAW_TAG" | tr -c 'A-Za-z0-9_.-' '-' | sed -E 's/^[.-]+//' | cut -c1-128)
+          if [ -z "$TAG" ]; then echo "::error::Tag is empty after sanitisation (input: '$RAW_TAG')"; exit 1; fi
+          echo "Building ${IMAGE}:${TAG} (from input '${RAW_TAG}')"
+          docker build . --tag "${IMAGE}:${TAG}"
+          docker push "${IMAGE}:${TAG}"
