@@ -1,10 +1,12 @@
+import os
+
 from .common import BASE_DIR
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
 LANGUAGE_CODE = "en-GB"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = os.environ.get("TIME_ZONE", "UTC")
 
 USE_I18N = True
 

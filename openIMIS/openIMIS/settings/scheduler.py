@@ -4,6 +4,10 @@ import sys
 # - Store jobs in the project database
 # - Execute jobs in threads inside the application process, for production use, we could use a dedicated process
 SCHEDULER_CONFIG = {
+    "apscheduler.timezone": os.environ.get(
+        "SCHEDULER_TIMEZONE",
+        os.environ.get("TIME_ZONE", "UTC"),
+    ),
     "apscheduler.jobstores.default": {
         "class": "django_apscheduler.jobstores:DjangoJobStore"
     },
