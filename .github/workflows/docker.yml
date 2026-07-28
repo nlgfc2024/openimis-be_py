@@ -1,24 +1,39 @@
-name: create daily docker image on develop
+# Malawi (NLGFC) release image — auto-built on every push to the team/release branch.
+# Publishes ONLY to ghcr.io/nlgfc2024; nothing is pushed to the openimis org.
+name: Build release backend image (nlgfc2024)
+
 on:
-  workflow_dispatch:
-  schedule:
-   - cron: "0 2 * * *"
+  push:
+    branches:
+      - sprint/2026-07   # Malawi release/team branch — every push rebuilds the release image
+  workflow_dispatch: {}   # allow a manual re-run of the release build
+
+concurrency:
+  group: release-image-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  publish-docker-develop-image:
+  publish-release-image:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write     # required to push to ghcr.io/nlgfc2024
     steps:
-    - uses: actions/checkout@v4
-      with:
-        ref: develop
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v1
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build the openimis backend  Docker image
-      run: |
-         LABEL=develop
-         docker build . --tag ghcr.io/openimis/openimis-be:${LABEL}
-         docker run ghcr.io/openimis/openimis-be:${LABEL}
-         docker push ghcr.io/openimis/openimis-be:${LABEL}
+      - uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push the release backend image
+        run: |
+          IMAGE=ghcr.io/nlgfc2024/openimis-be
+          SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
+          docker build . \
+            --tag "${IMAGE}:release" \
+            --tag "${IMAGE}:${SHA}"
+          docker push "${IMAGE}:release"
+          docker push "${IMAGE}:${SHA}"

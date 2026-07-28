@@ -1,29 +1,45 @@
-name: create manual docker image 
+# Malawi (NLGFC) manual image build — pick the branch/tag to build and the image tag to publish.
+# Publishes ONLY to ghcr.io/nlgfc2024; nothing is pushed to the openimis org.
+name: Build manual backend image (nlgfc2024)
+
 on:
   workflow_dispatch:
-    inputs:   
+    inputs:
+      ref:
+        description: 'Branch or tag to build from'
+        required: true
+        default: 'sprint/2026-07'
       tag:
+        description: 'Image tag to publish (e.g. 26.04, rc1, test)'
         required: true
       file_url:
-        description: 'url (CURL compatible) of your custom openIMIS.json'
+        description: 'Optional URL (CURL compatible) of a custom openimis.json'
         required: false
 
 jobs:
-  publish-manual-docker-image:
+  publish-manual-image:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write     # required to push to ghcr.io/nlgfc2024
     steps:
-    - uses: actions/checkout@v4
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v1
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Download custom openimis.json
-      if: ${{ inputs.file_url != '' }}
-      run: |
-          curl -o ./openimis.json ${{ inputs.file_url }}
-    - name: Build the openimis backend  Docker image
-      run: |
-         docker build . --tag ghcr.io/openimis/openimis-be:${{ github.event.inputs.tag }}
-         docker push ghcr.io/openimis/openimis-be:${{ github.event.inputs.tag }}
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download custom openimis.json
+        if: ${{ inputs.file_url != '' }}
+        run: curl -o ./openimis.json "${{ inputs.file_url }}"
+
+      - name: Build and push the backend image
+        run: |
+          IMAGE=ghcr.io/nlgfc2024/openimis-be
+          docker build . --tag "${IMAGE}:${{ inputs.tag }}"
+          docker push "${IMAGE}:${{ inputs.tag }}"
