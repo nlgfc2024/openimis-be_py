@@ -2,11 +2,11 @@
     "modules": [
         {
             "name": "core",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-core_py.git@sprint/2026-07#egg=openimis-be-core"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-core_py.git@2759c3af0e29c38df6e60efd3271af1beb29a5ac#egg=openimis-be-core"
         },
         {
             "name": "individual",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-individual_py.git@sprint/2026-07"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-individual_py.git@503142b8502fa7a281629c6aa99d3ae1b9209bf0"
         },
         {
             "name": "workflow",
@@ -22,7 +22,7 @@
         },
         {
             "name": "location",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-location_py.git@sprint/2026-07"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-location_py.git@e7e3d2ea02d2ee21105e0d22a07c49d4452843ab"
         },
         {
             "name": "medical",
@@ -130,11 +130,11 @@
         },
         {
             "name": "social_protection",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-social_protection_py.git@sprint/2026-07#egg=openimis-be-social_protection"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-social_protection_py.git@3c8c726ffc2e3c93b59db4e8392c87b876e609cf#egg=openimis-be-social_protection"
         },
         {
             "name": "project_social_protection",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-project_social_protection_py.git@sprint/2026-07#egg=openimis-be-project_social_protection"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-project_social_protection_py.git@a56028f6934fec6fdaa4593a87d77ef876b5a0cf#egg=openimis-be-project_social_protection"
         },
         {
             "name": "opensearch_reports",
@@ -150,7 +150,7 @@
         },
         {
             "name": "calcrule_timesheet",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-calcrule_timesheet_py.git@sprint/2026-07#egg=openimis-be-calcrule_timesheet"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-calcrule_timesheet_py.git@aaa8b67d2c4aca50c5719fbcf51a996d480c9ef5#egg=openimis-be-calcrule_timesheet"
         },
         {
             "name": "payroll",
@@ -162,7 +162,7 @@
         },
         {
             "name": "grievance_social_protection",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-grievance_social_protection_py.git@sprint/2026-07#egg=openimis-be-grievance_social_protection"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-grievance_social_protection_py.git@ae25ee23f89dc7276070f4097d69c291d69a0912#egg=openimis-be-grievance_social_protection"
         },
         {
             "name": "claim_sampling",
@@ -170,15 +170,15 @@
         },
         {
             "name": "deduplication",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-deduplication_py.git@sprint/2026-07#egg=openimis-be-deduplication"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-deduplication_py.git@1198055c94e92126a29636af9cc51339e34f8b04#egg=openimis-be-deduplication"
         },
         {
             "name": "msr_etl",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-msr_etl_py.git@sprint/2026-07#egg=openimis-be-msr_etl"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-msr_etl_py.git@5feb29ed86628e20fefc4f848b0acda150ca9c8c#egg=openimis-be-msr_etl"
         },
         {
             "name": "household_validation",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-household_validation_py.git@sprint/2026-07#egg=openimis-be-household_validation"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-household_validation_py.git@e869b99aa1d7aeff987f70b5c10f023ab2785264#egg=openimis-be-household_validation"
         }
     ]
 }
