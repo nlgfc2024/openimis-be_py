@@ -6,7 +6,7 @@
         },
         {
             "name": "individual",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-individual_py.git@mw/develop"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-individual_py.git@5cdabe5806a05b09a4166d24554cfff9c72252ce"
         },
         {
             "name": "workflow",
@@ -130,7 +130,7 @@
         },
         {
             "name": "social_protection",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-social_protection_py.git@mw/develop#egg=openimis-be-social_protection"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-social_protection_py.git@5b0b27975cd792884e4d2599cc463b38efa48113#egg=openimis-be-social_protection"
         },
         {
             "name": "project_social_protection",
