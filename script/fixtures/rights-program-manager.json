@@ -804,6 +804,31 @@
           "Program Manager"
         ]
       }
+    },
+    {
+      "model": "core.roleright",
+      "fields": {
+        "validity_from": "2026-08-21T00:00:00Z",
+        "validity_to": null,
+        "legacy_id": null,
+        "right_id": "171005",
+        "audit_user_id": null,
+        "role": [
+          "Program Manager"
+        ]
+      }
+    },
+    {
+      "model": "core.roleright",
+      "fields": {
+        "validity_from": "2026-08-21T00:00:00Z",
+        "validity_to": null,
+        "legacy_id": null,
+        "right_id": "171006",
+        "audit_user_id": null,
+        "role": [
+          "Program Manager"
+        ]
+      }
     }
   ]
-  
