@@ -583,18 +583,5 @@
           "Case Worker / Social Officer"
         ]
       }
-    },
-    {
-      "model": "core.roleright",
-      "fields": {
-        "validity_from": "2026-08-21T00:00:00Z",
-        "validity_to": null,
-        "legacy_id": null,
-        "right_id": "171005",
-        "audit_user_id": null,
-        "role": [
-          "Case Worker / Social Officer"
-        ]
-      }
     }
   ]
