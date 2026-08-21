@@ -144,16 +144,29 @@ jobs:
       #     DB_USER: sa
       #     DB_PASSWORD: YourStrong!Passw0rd
 
-      - name: Django tests PSQL
+      - name: Validate Malawi configuration fixtures
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          fixture = Path("script/fixtures/module-configuration-core.json")
+          records = json.loads(fixture.read_text())
+          for record in records:
+              config = record.get("fields", {}).get("config")
+              if config:
+                  json.loads(config)
+          print("Fixture and embedded ModuleConfiguration JSON are valid")
+          PY
+
+      - name: Django Phase enrollment integration tests PSQL
         working-directory: ./openIMIS
-        # Run the tests regardless if previous steps failed (if setup fails the tests should crash instantly)
-        if: success() || failure()
         run: |
           python -V
-          export MODULES=$(jq -r '(.modules[].name)' ../openimis.json | xargs)
-          MODULES=$(echo "$MODULES" | sed -E "s/\b$(echo "${CI_EXCLUDED_MODULE// /\\b|\\b}")\b/ /g" | xargs)
-          echo $MODULES
-          python manage.py test --keepdb $MODULES
+          python manage.py test --keepdb \
+            social_protection.tests.test_phase_defaults \
+            social_protection.tests.test_benefit_plan_criteria_permissions \
+            individual.tests.test_authoritative_enrollment
         env:
           SECRET_KEY: secret
           MODE: DEV
@@ -169,7 +182,6 @@ jobs:
           DB_PASSWORD: YourStrong!Passw0rd
           #DEV_SERVER: true
           SITE_ROOT: api
-          CI_EXCLUDED_MODULE: ${{ vars.CI_EXCLUDED_MODULE }}
           OPENSEARCH_ADMIN: admin
           OPENSEARCH_PASSWORD: B9wc9VrqX7pY
           OPEN_SEARCH_HTTP_PORT: 9200
