@@ -74,12 +74,19 @@ jobs:
           echo "TARGET_BRANCH=$TARGET_BRANCH" >> $GITHUB_ENV
           echo "Cloning openimis-be_py from branch: $TARGET_BRANCH"
 
-          # Clone with the determined branch
+          # Clone with the determined branch.
+          # Prefer the nlgfc2024 fork: it is the only remote carrying mw/develop
+          # and jobs-now/develop. Cloning upstream for those branches silently
+          # falls back to upstream develop, whose openimis.json pins every module
+          # from openimis/*, which then conflicts with the locally built module.
           rm -rf ./openimis
-          git clone --depth=1 --branch="$TARGET_BRANCH" https://github.com/openimis/openimis-be_py.git ./openimis || {
-            echo "Failed to clone branch '$TARGET_BRANCH' – falling back to 'develop'"
-            git clone --depth=1 --branch=develop https://github.com/openimis/openimis-be_py.git ./openimis
-            echo "Cloned fallback branch: develop"
+          git clone --depth=1 --branch="$TARGET_BRANCH" https://github.com/nlgfc2024/openimis-be_py.git ./openimis || {
+            echo "Branch '$TARGET_BRANCH' not on the nlgfc2024 fork – trying upstream"
+            git clone --depth=1 --branch="$TARGET_BRANCH" https://github.com/openimis/openimis-be_py.git ./openimis || {
+              echo "Failed to clone branch '$TARGET_BRANCH' from either remote – falling back to upstream 'develop'"
+              git clone --depth=1 --branch=develop https://github.com/openimis/openimis-be_py.git ./openimis
+              echo "Cloned fallback branch: develop"
+            }
           }
 
           # Verify what we actually got
