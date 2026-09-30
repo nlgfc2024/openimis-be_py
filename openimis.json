@@ -154,7 +154,7 @@
         },
         {
             "name": "payroll",
-            "pip": "git+https://github.com/openimis/openimis-be-payroll_py.git@release/26.04#egg=openimis-be-payroll"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-payroll_py.git@mw/develop#egg=openimis-be-payroll"
         },
         {
             "name": "controls",
