@@ -100,7 +100,7 @@ CORS_ALLOW_CREDENTIALS = True
 
 
 SESSION_COOKIE_SAMESITE = 'Lax'  # or 'None' if cross-site
-USER_AGENT_CSRF_BYPASS = [bypass.strip() for bypass in os.getenv("USER_AGENT_CSRF_BYPASS", '').split(',') if bypass != '']
+USER_AGENT_CSRF_BYPASS = [bypass.strip() for bypass in os.getenv("USER_AGENT_CSRF_BYPASS", '').split(',') if bypass.strip()]
 # Adjust other settings as needed for your specific application
 # ...
 
