@@ -102,7 +102,7 @@ jobs:
           sudo bash ./sql_psql/install_postgres_json_schema_extension.sh
           echo 'set search_path to public' >> ~/.psqlrc
           export PGPASSWORD="$DB_PASSWORD"
-          psql -v ON_ERROR_STOP=1 -U "$DB_USER" -h "$DB_HOST" -d "$DB_NAME_TEST" -f './sql_psql/database scripts/json_schema_extension.sql'
+          psql -v ON_ERROR_STOP=1 -U "$DB_USER" -h "$DB_HOST" -d "$DB_NAME_TEST" -c 'CREATE EXTENSION IF NOT EXISTS "postgres-json-schema";'
           # Test discovery imports modules that query the normal database. Give
           # it the same legacy schema as the test database before migrations.
           createdb -U "$DB_USER" -h "$DB_HOST" --template="$DB_NAME_TEST" "$DB_NAME"
