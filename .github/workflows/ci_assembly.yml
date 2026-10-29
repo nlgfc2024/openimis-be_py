@@ -87,6 +87,7 @@ jobs:
           pip install -r ../requirements.txt
           python modules-requirements.py ../openimis.json > modules-requirements.txt
           pip install --no-cache-dir -r modules-requirements.txt
+          python apply_ci_test_patches.py
 
       - name: Environment info
         run: |
