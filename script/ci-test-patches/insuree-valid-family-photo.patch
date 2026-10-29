@@ -1,0 +1,11 @@
+--- insuree/tests/test_graphql.py
++++ insuree/tests/test_graphql.py
+@@ -63,7 +63,7 @@
+         cls.admin_dist_token = BaseTestContext(user=cls.admin_dist_user).get_jwt()
+         cls.photo_base64 = "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAAA1BMVEW10NBjBBbqAAAAH0lEQVRoge3BAQ0AAADCoPdPbQ43oAAAAAAAAAAAvg0hAAABmmDh1QAAAABJRU5ErkJggg=="
+ 
+-        cls.photo_base64_2 = "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAAA1BMVEW10NBjBBbrAAAAH0lEQVRoge3BAQ0AAADCoPdPbQ43oAAAAAAAAAAAvg0hAAABmmDh1QAAAABJRU5ErkJggg=="
++        cls.photo_base64_2 = "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGNkYPjPwMDAxMDAwMDAAAALHwEDmIWXfgAAAABJRU5ErkJggg=="
+         cls.eo_user = create_test_interactive_user(username="Positif", roles=[create_enrolment_officer_role().id])
+         cls.non_eo_user = create_test_interactive_user(username="NonEo", roles=[
+             create_scheme_admin_role().id,

@@ -1,5 +1,14 @@
 --- claim_batch/tests/test_graphql.py
 +++ claim_batch/tests/test_graphql.py
+@@ -66,7 +66,7 @@
+         cls.ca_user = create_test_interactive_user(username="testLocationNoRight", roles=[9])
+         cls.ca_token = BaseTestContext(user=cls.ca_user).get_jwt()
+         cls.admin_dist_user = create_test_interactive_user(username="testLocationDist")
+-        assign_user_districts(cls.admin_dist_user, ["R1D1", "R2D1", "R2D2", "R2D1", cls.test_village.parent.parent.code])
++        assign_user_districts(cls.admin_dist_user, [cls.test_village.parent.parent.code])
+         cls.admin_dist_token = BaseTestContext(user=cls.admin_dist_user).get_jwt()
+         cls.submit_service = ClaimSubmitService(cls.admin_dist_user)
+         insuree = create_test_insuree()
 @@ -129,8 +129,8 @@
              policy_id=policy.id, custom_props={"payer_id": payer.id}
          )
