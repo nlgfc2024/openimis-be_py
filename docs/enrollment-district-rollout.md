@@ -1,3 +1,5 @@
+> Superseded integration baseline: the historical Individual pins and test results below describe the pre-extraction implementation. The current port lives in the Enrolment modules. See `enrolment-module-integration.md` for the current ownership, configuration, and acceptance gates.
+
 # Optional district enrollment rollout
 
 Runtime dependencies: the individual module revision pinned in `openimis.json` implements `district_id__exact__integer=<numeric R ID>`. Merge the module PR before the assembly PR; review the exact pin when rebasing. This document and the preparation script do not apply production changes.

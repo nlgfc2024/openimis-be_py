@@ -6,7 +6,7 @@
         },
         {
             "name": "individual",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-individual_py.git@0e293ee761b117e35a1bd66dc21cb494dba21f9f"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-individual_py.git@da6e3396f77cf46279bc6b6d2c0f3275e01fc9e9"
         },
         {
             "name": "workflow",
@@ -130,11 +130,11 @@
         },
         {
             "name": "social_protection",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-social_protection_py.git@mw/develop#egg=openimis-be-social_protection"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-social_protection_py.git@03fac2c1b227862b5e4296a15b3cad333bfa2d97#egg=openimis-be-social_protection"
         },
         {
             "name": "enrolment",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-enrolment_py.git@mw/develop#egg=openimis-be-enrolment"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-enrolment_py.git@1d37beb9c9b7d522ea7cbb67b35e22f579edd822#egg=openimis-be-enrolment"
         },
         {
             "name": "project_social_protection",
