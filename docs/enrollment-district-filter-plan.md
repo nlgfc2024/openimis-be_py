@@ -77,7 +77,7 @@ Keep commits separated by issue for reviewer navigation. Add new commits for rev
 
 - openimis-be-individual_py: https://github.com/nlgfc2024/openimis-be-individual_py/pull/22
 - openimis-fe-individual_js: https://github.com/nlgfc2024/openimis-fe-individual_js/pull/26
-- openimis-fe-core_js: https://github.com/nlgfc2024/openimis-fe-core_js/pull/26
+- CoreMIS labels: https://github.com/nlgfc2024/openimis-fe-coremis_language_pack_js/pull/19 (replaces closed core PR #26)
 - openimis-be_py: https://github.com/nlgfc2024/openimis-be_py/pull/17
 - openimis-fe_js: https://github.com/nlgfc2024/openimis-fe_js/pull/11
 
