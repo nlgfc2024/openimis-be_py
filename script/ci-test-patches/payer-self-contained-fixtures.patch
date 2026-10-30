@@ -1,0 +1,33 @@
+--- payer/tests.py
++++ payer/tests.py
+@@ -14,6 +14,8 @@
+ from location.test_helpers import create_test_location, create_test_health_facility, create_test_village
+ from payer.models import Payer
+ from product.models import Product
++from payer.test_helpers import create_test_payer
++from product.test_helpers import create_test_product
+ 
+ 
+ # from openIMIS import schema
+@@ -40,7 +42,9 @@
+         cls.ca_user = create_test_interactive_user(username="testLocationNoRight", roles=[9])
+         cls.ca_token = get_token(cls.ca_user, DummyContext(user=cls.ca_user))
+         cls.admin_dist_user = create_test_interactive_user(username="testLocationDist")
+-        assign_user_districts(cls.admin_dist_user, ["R1D1", "R2D1", "R2D2", "R2D1", cls.test_village.parent.parent.code])
++        assign_user_districts(cls.admin_dist_user, [cls.test_village.parent.parent.code])
++        cls.test_payer = create_test_payer()
++        cls.test_product = create_test_product()
+         cls.admin_dist_token = get_token(cls.admin_dist_user, DummyContext(user=cls.admin_dist_user))
+ 
+     def test_query_payer(self):
+@@ -112,8 +116,8 @@
+                 "amount": 34576,
+                 "clientMutationId": "6e3747b2-135b-4258-ab2b-d00bb2c4f640",
+                 "payDate": "2023-12-12",
+-                "payerId": Payer.objects.first().id,
+-                "productId": Product.objects.first().id,
++                "payerId": self.test_payer.id,
++                "productId": self.test_product.id,
+                 "receipt": "324534"
+               }
+             },

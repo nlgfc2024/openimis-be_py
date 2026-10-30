@@ -87,8 +87,7 @@ jobs:
           pip install -r ../requirements.txt
           python modules-requirements.py ../openimis.json > modules-requirements.txt
           pip install --no-cache-dir -r modules-requirements.txt
-          export MODULES=$(jq -r '(.modules[].name)' openimis.json | xargs)
-          echo $modules
+          python apply_ci_test_patches.py
 
       - name: Environment info
         run: |
@@ -102,13 +101,23 @@ jobs:
           git clone  --depth=1 --branch=$DBBRANCH https://github.com/openimis/database_postgresql.git ./sql_psql
           sudo bash ./sql_psql/install_postgres_json_schema_extension.sh
           echo 'set search_path to public' >> ~/.psqlrc
-          PGPASSWORD=YourStrong!Passw0rd psql -U $DB_USER -h $DB_HOST -d $DB_NAME_TEST -f  ./sql_psql/database\ scripts/json_schema_extension.sql | grep . | uniq -c
+          export PGPASSWORD="$DB_PASSWORD"
+          psql -v ON_ERROR_STOP=1 -U "$DB_USER" -h "$DB_HOST" -d "$DB_NAME_TEST" -c 'CREATE EXTENSION IF NOT EXISTS "postgres-json-schema";'
+          # Test discovery imports modules that query the normal database. Give
+          # it the same legacy schema as the test database before migrations.
+          createdb -U "$DB_USER" -h "$DB_HOST" --template="$DB_NAME_TEST" "$DB_NAME"
+          OPENIMIS_CONF="$GITHUB_WORKSPACE/openimis.json" python openIMIS/manage.py migrate --noinput
         env:
           DB_HOST: localhost
           DB_PORT: 5432
           DB_NAME: imis
           DB_USER: postgres
           DB_PASSWORD: YourStrong!Passw0rd
+          SECRET_KEY: secret
+          MODE: DEV
+          DB_DEFAULT: postgresql
+          CELERY_BROKER_URL: "memory://openIMIS-test//"
+          CELERY_RESULT_BACKEND: "cache+memory://openIMIS-test//"
 
       # - name: Initialize MSSQL
       #   run: |
@@ -146,8 +155,6 @@ jobs:
 
       - name: Django tests PSQL
         working-directory: ./openIMIS
-        # Run the tests regardless if previous steps failed (if setup fails the tests should crash instantly)
-        if: success() || failure()
         run: |
           python -V
           export MODULES=$(jq -r '(.modules[].name)' ../openimis.json | xargs)
