@@ -136,10 +136,12 @@ jobs:
         run: |
           MODULE_NAME="$(echo "$GITHUB_REPOSITORY" | sed 's#^[^/]*/openimis-be-\(.*\)_py$#\1#')"
           echo "MODULE_NAME=$MODULE_NAME" >> "$GITHUB_ENV"
+          # A normal (not editable) install, as the Docker image does, so packaging mistakes
+          # (for example a package directory missing __init__.py) fail here too.
           jq --arg name "$MODULE_NAME" '
             if any(.modules[]; .name == $name)
-            then (.modules[] | select(.name == $name) | .pip) |= "-e ../../current-module"
-            else .modules += [{name: $name, pip: "-e ../../current-module"}] end' openimis.json > openimis.json.new
+            then (.modules[] | select(.name == $name) | .pip) |= "../../current-module"
+            else .modules += [{name: $name, pip: "../../current-module"}] end' openimis.json > openimis.json.new
           mv openimis.json.new openimis.json
           jq -c '.modules[] | select(.name == env.MODULE_NAME)' openimis.json
 
