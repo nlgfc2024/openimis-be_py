@@ -1,168 +1,50 @@
-name: Automated CI testing
-# This workflow run automatically for every commit on github it checks the syntax and launch the tests.
-# | grep . | uniq -c filters out empty lines and then groups consecutive lines together with the number of occurrences
+name: Malawi module CI
+# Reusable workflow called by every nlgfc2024 backend module repo (see their ci.yml).
+#
+# It installs the Malawi backend assembly (nlgfc2024/openimis-be_py, using the pins in its
+# openimis.json), swaps in the module under test from the PR head, and runs that module's
+# Django tests against PostgreSQL. Only the module's own tests decide the result; the full
+# suite of every module runs on the hub itself (ci_assembly.yml).
+#
+# A green run means tests really ran and passed: the job fails if no tests were found.
+# flake8 is reported in the job summary and never fails the run.
 on:
   workflow_call:
+    inputs:
+      be_fallback_branch:
+        description: Hub branch used when the hub has no branch matching the PR base / pushed branch
+        required: false
+        type: string
+        default: mw/develop
+      test_args:
+        description: Extra arguments for manage.py test
+        required: false
+        type: string
+        default: --keepdb
+      allow_no_tests:
+        description: Pass even if the module has no tests (only for modules that genuinely have none yet)
+        required: false
+        type: boolean
+        default: false
+      # Accepted and ignored, so callers that still pass the old SonarCloud settings keep working.
+      SONAR_PROJECT_KEY: {required: false, type: string}
+      SONAR_ORGANIZATION: {required: false, type: string}
+      SONAR_PROJECT_NAME: {required: false, type: string}
+      SONAR_PROJECT_VERSION: {required: false, type: string}
+      SONAR_EXCLUSIONS: {required: false, type: string}
+      SONAR_SOURCES: {required: false, type: string}
+      branchName: {required: false, type: string}
     secrets:
       SONAR_TOKEN:
-        description: 'A sonar access token passed from the caller workflow'
         required: false
-    inputs:
-      SONAR_PROJECT_KEY:
-        description: 'SonarQube Project Key'
-        required: false
-        type: string
-      SONAR_ORGANIZATION:
-        description: 'SonarQube Organization'
-        required: false
-        type: string
-      SONAR_PROJECT_NAME:
-        description: 'SonarQube Project Name'
-        required: false
-        type: string
-      SONAR_PROJECT_VERSION:
-        description: 'SonarQube Project Version'
-        required: false
-        type: string
-      SONAR_EXCLUSIONS:
-        description: 'SonarQube Project Exclusions'
-        required: false
-        type: string
-      SONAR_SOURCES:
-        description: 'SonarQube Project Sources'
-        required: false
-        type: string
 
-      branchName:
-        required: false
-        type: string
-        default: 'develop'
+env:
+  HUB_REPOSITORY: nlgfc2024/openimis-be_py
 
 jobs:
-  build_backend:
-    name: Build Backend
+  module_tests:
+    name: Module tests
     runs-on: ubuntu-24.04
-    steps:
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Pull openIMIS Backend
-        run: |
-          # ------------------------------------------------------------------
-          # Determine which branch of openimis-be_py we should use
-          # ------------------------------------------------------------------
-          if [[ "${{ github.event_name }}" == "pull_request" || "${{ github.event_name }}" == "pull_request_target" ]]; then
-            # For PRs → always use the base branch (where the PR is merged into)
-            TARGET_BRANCH="${{ github.event.pull_request.base.ref }}"
-            echo "Event is a Pull Request → using base branch: $TARGET_BRANCH"
-          else
-            # For push (direct commit on a branch), workflow_dispatch, etc.
-            # → use the CURRENT branch name (e.g. feature/xyz, hotfix/abc, main, develop…)
-            CURRENT_BRANCH="${GITHUB_REF#refs/heads/}"
-            TARGET_BRANCH="$CURRENT_BRANCH"
-            echo "Not a PR → using current branch: $TARGET_BRANCH"
-          fi
-
-          # Final fallback only if something went terribly wrong
-          if [[ -z "$TARGET_BRANCH" ]]; then
-            echo "WARNING: TARGET_BRANCH is empty! Falling back to 'develop'"
-            TARGET_BRANCH="develop"
-          fi
-
-          echo "TARGET_BRANCH=$TARGET_BRANCH" >> $GITHUB_ENV
-          echo "Cloning openimis-be_py from branch: $TARGET_BRANCH"
-
-          # Clone with the determined branch.
-          # Prefer the nlgfc2024 fork: it is the only remote carrying mw/develop
-          # and jobs-now/develop. Cloning upstream for those branches silently
-          # falls back to upstream develop, whose openimis.json pins every module
-          # from openimis/*, which then conflicts with the locally built module.
-          rm -rf ./openimis
-          git clone --depth=1 --branch="$TARGET_BRANCH" https://github.com/nlgfc2024/openimis-be_py.git ./openimis || {
-            echo "Branch '$TARGET_BRANCH' not on the nlgfc2024 fork – trying upstream"
-            git clone --depth=1 --branch="$TARGET_BRANCH" https://github.com/openimis/openimis-be_py.git ./openimis || {
-              echo "Failed to clone branch '$TARGET_BRANCH' from either remote – falling back to upstream 'develop'"
-              git clone --depth=1 --branch=develop https://github.com/openimis/openimis-be_py.git ./openimis
-              echo "Cloned fallback branch: develop"
-            }
-          }
-
-          # Verify what we actually got
-          cd ./openimis
-          CLONED_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-          echo "Actually cloned branch: $CLONED_BRANCH"
-      - name: Copy Current branch
-        uses: actions/checkout@v4
-        with:
-          # Disabling shallow clone is recommended for improving relevancy of reporting
-          fetch-depth: 0
-          path: './current-module'
-
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-            ${{ runner.os }}-pip-
-            ${{ runner.os }}-
-
-      - name: Update the configuration
-        working-directory: ./openimis
-        run: |
-          sudo apt-get update
-          sudo apt-get install jq
-
-          export MODULE_NAME="$(echo "$GITHUB_REPOSITORY" | sed 's#^[^/]*/openimis-be-\(.*\)_py$#\1#')"
-          
-          echo "MODULE_NAME=$MODULE_NAME" >> $GITHUB_ENV
-          
-          # Add or replace MODULE_NAME module in openimis.json (local version)
-          echo $(jq --arg name "$MODULE_NAME" 'if [.modules[].name  ==  ($name)]| max then (.modules[]  | select(.name == ($name)) | .pip)|="-e ../../current-module" else .modules |= .+ [{name:($name), pip:"../../current-module"}] end' openimis.json)  > openimis.json
-          cat openimis.json
-
-      - name: Install Python dependencies
-        working-directory: ./openimis/script
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r ../requirements.txt
-          python modules-requirements.py ../openimis.json > modules-requirements.txt
-          cat modules-requirements.txt
-          pip install --no-cache-dir -r modules-requirements.txt
-
-      - name: Environment info
-        run: |
-          pip list
-
-      - name: Locate site-packages and upload
-        run: |
-          SITE_PACKAGES=$(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
-          echo "SITE_PACKAGES=$SITE_PACKAGES" >> $GITHUB_ENV
-        id: locate
-
-      - name: Compress IMIS artifacts
-        run: |
-          tar -czf site-packages.tar.gz -C ${{ env.SITE_PACKAGES }} .
-          tar -czf openimis.tar.gz ./openimis ./current-module
-
-      - name: Upload compressed site-packages as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: site-packages
-          path: site-packages.tar.gz
-
-      - name: Upload build as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: code-artifacts
-          path: openimis.tar.gz
-  ci_module_psql_test_module_only:
-    name: Run Module Tests (PSQL)
-    runs-on: ubuntu-24.04
-    needs: build_backend
     services:
       opensearch:
         image: opensearchproject/opensearch:latest
@@ -182,8 +64,6 @@ jobs:
       pgsql:
         image: ghcr.io/openimis/openimis-pgsql:develop
         env:
-          DB_HOST: localhost
-          DB_PORT: 5432
           POSTGRES_DB: test_imis
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: YourStrong!Passw0rd
@@ -194,310 +74,144 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
+    env:
+      SECRET_KEY: secret
+      MODE: DEV
+      DB_DEFAULT: postgresql
+      CELERY_BROKER_URL: "memory://openIMIS-test//"
+      CELERY_RESULT_BACKEND: "cache+memory://openIMIS-test//"
+      DB_HOST: localhost
+      DB_PORT: 5432
+      # Main and test database are the same database the service creates, so code that
+      # touches the database at import time finds one.
+      DB_NAME: test_imis
+      DB_TEST_NAME: test_imis
+      DB_USER: postgres
+      DB_PASSWORD: YourStrong!Passw0rd
+      SITE_ROOT: api
+      OPENSEARCH_ADMIN: admin
+      OPENSEARCH_PASSWORD: B9wc9VrqX7pY
+      OPEN_SEARCH_HTTP_PORT: 9200
+      OPENSEARCH_HOSTS: "localhost:9200"
     steps:
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Download site-packages artifact
-        uses: actions/download-artifact@v4
+      - name: Choose the hub branch
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PUSHED_REF: ${{ github.ref_name }}
+          FALLBACK: ${{ inputs.be_fallback_branch }}
+        run: |
+          # PRs use the hub branch named like the PR base (mw/develop, jobs-now/develop,
+          # release/mw/...); pushes use the hub branch named like the pushed branch.
+          # Anything the hub does not have (stacked feature branches) uses the fallback.
+          # Never upstream openimis: that would test against the wrong pins.
+          if [[ "$EVENT" == pull_request* ]]; then WANTED="$PR_BASE_REF"; else WANTED="$PUSHED_REF"; fi
+          if [[ -n "$WANTED" ]] && git ls-remote --exit-code --heads "https://github.com/$HUB_REPOSITORY.git" "refs/heads/$WANTED" > /dev/null; then
+            HUB_BRANCH="$WANTED"
+          else
+            HUB_BRANCH="$FALLBACK"
+          fi
+          echo "HUB_BRANCH=$HUB_BRANCH" >> "$GITHUB_ENV"
+          echo "Wanted hub branch '$WANTED', using '$HUB_BRANCH'"
+
+      - name: Check out the hub
+        uses: actions/checkout@v4
         with:
-          name: site-packages
-          path: /tmp/
+          repository: ${{ env.HUB_REPOSITORY }}
+          ref: ${{ env.HUB_BRANCH }}
+          path: openimis
 
-      - name: Locate site-packages
-        run: |
-          SITE_PACKAGES=$(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
-          echo "SITE_PACKAGES=$SITE_PACKAGES" >> $GITHUB_ENV
-
-      - name: Download site-packages artifact
-        uses: actions/download-artifact@v4
+      - name: Check out the module under test
+        uses: actions/checkout@v4
         with:
-          name: code-artifacts
-          path: /tmp/
+          path: current-module
 
-      - name: Decompress artifacts
+      - name: Use the module under test in openimis.json
+        working-directory: ./openimis
         run: |
-          sudo tar -xzf /tmp/site-packages.tar.gz -C ${{ env.SITE_PACKAGES }}
-          sudo tar -xzf /tmp/openimis.tar.gz -C .
-      - name: Initialize PSQL
+          MODULE_NAME="$(echo "$GITHUB_REPOSITORY" | sed 's#^[^/]*/openimis-be-\(.*\)_py$#\1#')"
+          echo "MODULE_NAME=$MODULE_NAME" >> "$GITHUB_ENV"
+          # A normal (not editable) install, as the Docker image does, so packaging mistakes
+          # (for example a package directory missing __init__.py) fail here too.
+          jq --arg name "$MODULE_NAME" '
+            if any(.modules[]; .name == $name)
+            then (.modules[] | select(.name == $name) | .pip) |= "../../current-module"
+            else .modules += [{name: $name, pip: "../../current-module"}] end' openimis.json > openimis.json.new
+          mv openimis.json.new openimis.json
+          jq -c '.modules[] | select(.name == env.MODULE_NAME)' openimis.json
+
+      - name: Cache pip downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('openimis/requirements.txt', 'openimis/openimis.json') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Install the assembly
+        working-directory: ./openimis/script
         run: |
-          export DB_NAME_TEST="test_$DB_NAME"
-          if [ ${GITHUB_REF##*/} = "main" ]; then export DBBRANCH="main"; else export DBBRANCH="develop"; fi
-          echo "Branch ${GITHUB_REF##*/}, usign ${DBBRANCH} branch for database"
-          git clone  --depth=1 --branch=$DBBRANCH https://github.com/openimis/database_postgresql.git ./sql_psql
+          python -m pip install --upgrade pip
+          pip install -r ../requirements.txt
+          python modules-requirements.py ../openimis.json > modules-requirements.txt
+          cat modules-requirements.txt
+          pip install -r modules-requirements.txt
+          pip list
+
+      - name: Prepare PostgreSQL
+        run: |
+          git clone --depth=1 --branch=develop https://github.com/openimis/database_postgresql.git ./sql_psql
           sudo bash ./sql_psql/install_postgres_json_schema_extension.sh
-          echo 'set search_path to public' >> ~/.psqlrc
-          PGPASSWORD=YourStrong!Passw0rd psql -U $DB_USER -h $DB_HOST -d $DB_NAME_TEST -f  ./sql_psql/database\ scripts/json_schema_extension.sql | grep . | uniq -c
-        env:
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_NAME: imis
-          DB_USER: postgres
-          DB_PASSWORD: YourStrong!Passw0rd
-      
-      
-      - name: Django tests PSQL
+          PGPASSWORD="$DB_PASSWORD" psql -U "$DB_USER" -h "$DB_HOST" -d "$DB_NAME" \
+            -f "./sql_psql/database scripts/json_schema_extension.sql" | grep . | uniq -c
+
+      - name: Run the module's tests
         working-directory: ./openimis/openIMIS
-
-        # Run the tests regardless if previous steps failed (if setup fails the tests should crash instantly)
-        if: success() || failure()
-        run: |
-          python -V
-          export MODULE_NAME="$(echo "$GITHUB_REPOSITORY" | sed 's#^[^/]*/openimis-be-\(.*\)_py$#\1#')"
-          python manage.py test --keepdb $MODULE_NAME
         env:
-          SECRET_KEY: secret
-          MODE: DEV
-          DB_DEFAULT: postgresql
-          CELERY_BROKER_URL: "memory://openIMIS-test//"
-          CELERY_RESULT_BACKEND: "cache+memory://openIMIS-test//"
-          #DJANGO_SETTINGS_MODULE: hat.settings
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_NAME: test_imis
-          DB_TEST_NAME: test_imis
-          DB_USER: postgres
-          DB_PASSWORD: YourStrong!Passw0rd
-          #DEV_SERVER: true
-          SITE_ROOT: api
-          CI_EXCLUDED_MODULE: ${{ vars.CI_EXCLUDED_MODULE }}
-          OPENSEARCH_ADMIN: admin
-          OPENSEARCH_PASSWORD: B9wc9VrqX7pY
-          OPEN_SEARCH_HTTP_PORT: 9200
-          OPENSEARCH_HOSTS: "localhost:9200"
-  ci_module_psql_test:
-    name: Run All Tests (PSQL)
-    runs-on: ubuntu-24.04
-    needs: build_backend
-    services:
-      pgsql:
-        image: ghcr.io/openimis/openimis-pgsql:develop
-        env:
-          DB_HOST: localhost
-          DB_PORT: 5432
-          POSTGRES_DB: test_imis
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: YourStrong!Passw0rd
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
-    steps:
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Download site-packages artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: site-packages
-          path: /tmp/
-
-      - name: Locate site-packages
+          TEST_ARGS: ${{ inputs.test_args }}
+          ALLOW_NO_TESTS: ${{ inputs.allow_no_tests }}
         run: |
-          SITE_PACKAGES=$(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
-          echo "SITE_PACKAGES=$SITE_PACKAGES" >> $GITHUB_ENV
+          set -o pipefail
+          # TEST_ARGS is unquoted on purpose: it may hold several arguments.
+          python manage.py test $TEST_ARGS "$MODULE_NAME" 2>&1 | tee ../../test-output.txt
+          RAN=$(grep -oE '^Ran [0-9]+ tests?' ../../test-output.txt | grep -oE '[0-9]+' | tail -1)
+          RAN=${RAN:-0}
+          echo "TESTS_RAN=$RAN" >> "$GITHUB_ENV"
+          if [[ "$RAN" == "0" && "$ALLOW_NO_TESTS" != "true" ]]; then
+            echo "::error::No tests ran for $MODULE_NAME. A green check must mean tests ran."
+            exit 1
+          fi
 
-      - name: Download site-packages artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: code-artifacts
-          path: /tmp/
-
-      - name: Decompress artifacts
+      - name: flake8 report (does not fail the run)
+        if: always()
+        continue-on-error: true
         run: |
-          sudo tar -xzf /tmp/site-packages.tar.gz -C ${{ env.SITE_PACKAGES }}
-          sudo tar -xzf /tmp/openimis.tar.gz -C .
-      - name: Initialize PSQL
-        run: |
-          if [ ${GITHUB_REF##*/} = "main" ]; then export DBBRANCH="main"; else export DBBRANCH="develop"; fi
-          echo "Branch ${GITHUB_REF##*/}, usign ${DBBRANCH} branch for database"
-          git clone  --depth=1 --branch=$DBBRANCH https://github.com/openimis/database_postgresql.git ./sql_psql
-          sudo bash ./sql_psql/install_postgres_json_schema_extension.sh
-          echo 'set search_path to public' >> ~/.psqlrc
-          PGPASSWORD=YourStrong!Passw0rd psql -U $DB_USER -h $DB_HOST -d $DB_NAME_TEST -f  ./sql_psql/database\ scripts/json_schema_extension.sql | grep . | uniq -c
-        env:
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_NAME: test_imis
-          DB_TEST_NAME: test_imis
-          DB_USER: postgres
-          DB_PASSWORD: YourStrong!Passw0rd
-      
-      
-      - name: Django tests PSQL
-        working-directory: ./openimis/openIMIS
-        # Run the tests regardless if previous steps failed (if setup fails the tests should crash instantly)
-        if: success() || failure()
-        run: |
-          python -V
-          export MODULES=$(jq -r '(.modules[].name)' ../openimis.json | xargs)
-          MODULES=$(echo "$MODULES" | sed -E "s/\b$(echo "${CI_EXCLUDED_MODULE// /\\b|\\b}")\b/ /g" | xargs)
-          echo $MODULES
-          python manage.py test --keepdb $MODULES
-        env:
-          SECRET_KEY: secret
-          MODE: DEV
-          DB_DEFAULT: postgresql
-          CELERY_BROKER_URL: "memory://openIMIS-test//"
-          CELERY_RESULT_BACKEND: "cache+memory://openIMIS-test//"
-          #DJANGO_SETTINGS_MODULE: hat.settings
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_NAME: test_imis
-          DB_TEST_NAME: test_imis
-          DB_USER: postgres
-          DB_PASSWORD: YourStrong!Passw0rd
-          #DEV_SERVER: true
-          SITE_ROOT: api
-          CI_EXCLUDED_MODULE: ${{ vars.CI_EXCLUDED_MODULE }}
-          OPENSEARCH_ADMIN: admin
-          OPENSEARCH_PASSWORD: B9wc9VrqX7pY
-          OPEN_SEARCH_HTTP_PORT: 9200
-          OPENSEARCH_HOSTS: "localhost:9200"
-          OPENSEARCH_DSL_AUTOSYNC: False
-      # - name: Generate Coverage Report
-      #   if: always()
-      #   working-directory: ./openimis/openIMIS
-      #   run: |
-      #     python -m coverage xml -o coverage.xml
-      #     # Only leave actual code part, skip absuolute directory like 
-      #     # /home/runner/work/openimis-be-invoice_py/openimis-be-invoice_py/current-module/
-      #     # It's required by circle-ci setup
-      #     mkdir coverage
-      #     sed -E 's|/home/runner/work/(.*?)/(.*?)/current-module/|./current-module/|' coverage.xml >> coverage/coverage1.xml
-      #     sed -E 's|/home/runner/work/(.*?)/(.*?)/current-module/|./|' coverage.xml >> coverage/coverage2.xml
-          
-      #     cat coverage.xml
-      # - name: Coverage results
-      #   if: success() || failure()
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: coverage.xml
-      #     path: ./openimis/openIMIS/coverage
-  flake-8-linter:
-    continue-on-error: true
-    name: Run flake8 check
-    runs-on: ubuntu-24.04
-    needs: build_backend
-    steps:
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Download site-packages artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: site-packages
-          path: /tmp/
+          pip install flake8 > /dev/null
+          python -m flake8 "current-module/$MODULE_NAME" --exit-zero --ignore W503,E501 \
+            --exclude "*/migrations/*" > flake8-report.txt
+          COUNT=$(wc -l < flake8-report.txt)
+          {
+            echo "### flake8: $COUNT finding(s) (report only)"
+            if [[ "$COUNT" -gt 0 ]]; then
+              echo '<details><summary>Show</summary>'; echo; echo '```'
+              head -200 flake8-report.txt; echo '```'; echo '</details>'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Locate site-packages
+      - name: Summary
+        if: always()
         run: |
-          SITE_PACKAGES=$(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
-          echo "SITE_PACKAGES=$SITE_PACKAGES" >> $GITHUB_ENV
-
-      - name: Download code artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: code-artifacts
-          path: /tmp/
-
-      - name: Decompress artifacts
-        run: |
-          sudo tar -xzf /tmp/site-packages.tar.gz -C ${{ env.SITE_PACKAGES }}
-          sudo tar -xzf /tmp/openimis.tar.gz -C .
-      - name: Flake8 Style Check
-        working-directory: ./openimis/
-        # Run the tests regardless if previous steps failed (if setup fails the tests should crash instantly)
-        if: success() || failure()
-        run: |
-          # Flake8 Report
-          export MODULE_NAME="$(echo "$GITHUB_REPOSITORY" | sed 's#^[^/]*/openimis-be-\(.*\)_py$#\1#')"
-          MOD_DIR="../current-module/$MODULE_NAME"
-          python -m flake8 --output-file=flake8-report.txt $MOD_DIR --exit-zero --ignore W503
-          sed -i 's|\.\./current-module/||g' flake8-report.txt
-          
-          python -m flake8 $MOD_DIR --ignore W503,E501
-      - name: Flake8 results upload
-        if: success() || failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: flake8-report.txt
-          path: ./openimis/flake8-report.txt
-  # sonar_scan:
-  #   name: Run Sonar Scan
-  #   runs-on: ubuntu-24.04
-  #   needs: [ci_module_psql_test, flake-8-linter]
-  #   if: always()
-  #   env:
-  #     SONAR_PROJECT_KEY: ${{ inputs.SONAR_PROJECT_KEY }}
-  #     SONAR_ORGANIZATION: ${{ inputs.SONAR_ORGANIZATION }}
-  #     SONAR_PROJECT_NAME: ${{ inputs.SONAR_PROJECT_NAME }}
-  #     SONAR_PROJECT_VERSION: ${{ inputs.SONAR_PROJECT_VERSION }}
-  #     SONAR_PYTHON_VERSION: '3.11'
-  #     SONAR_FLAKE8_REPORT_PATHS: ../report/flake8-report.txt
-  #     SONAR_SOURCES: ${{ inputs.SONAR_SOURCES }}
-  #   steps:
-  #     - name: Set environment variables with default values
-  #       run: |
-  #         if [ -z "${{ inputs.SONAR_PROJECT_VERSION }}" ]; then
-  #           echo "SONAR_PROJECT_VERSION=1.0" >> $GITHUB_ENV
-  #         else
-  #           echo "SONAR_PROJECT_VERSION=${{ inputs.SONAR_PROJECT_VERSION }}" >> $GITHUB_ENV
-  #         fi
-
-  #         if [ -z "${{ inputs.SONAR_EXCLUSIONS }}" ]; then
-  #           echo "SONAR_EXCLUSIONS='**/migrations/**,**/static/**,**/media/**,**/tests/**'" >> $GITHUB_ENV
-  #         else
-  #           echo "SONAR_EXCLUSIONS=${{ inputs.SONAR_EXCLUSIONS }}" >> $GITHUB_ENV
-  #         fi
-  #     - name: Download coverage artifact
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: coverage.xml
-  #         path: report
-  #     - name: Download flake8 artifact
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: flake8-report.txt
-  #         path: report
-  #     - name: Download code artifact
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: code-artifacts
-  #         path: /tmp/
-  #     - name: Decompress artifacts
-  #       run: |
-  #         # This path is required by the structure of coverage.xml paths
-  #         sudo tar -xzf /tmp/openimis.tar.gz -C .
-  #     - name: Debug
-  #       run: |
-  #         ls -a
-  #         echo "---"
-  #         ls report
-  #         echo "---"
-  #         ls current-module -a
-
-  #     - name: SonarCloud Scan
-  #       uses: SonarSource/sonarcloud-github-action@master
-  #       with:
-  #         args: >
-  #           -Dsonar.projectKey=${{ inputs.SONAR_PROJECT_KEY }}
-  #           -Dsonar.organization=${{ inputs.SONAR_ORGANIZATION }}
-  #           -Dsonar.projectName=${{ inputs.SONAR_PROJECT_NAME }}
-  #           -Dsonar.projectVersion=${{ env.SONAR_PROJECT_VERSION }}
-  #           -Dsonar.python.version=3.11
-  #           -Dsonar.sources=current-module
-  #           -Dsonar.python.coverage.reportPaths=report/coverage1.xml,report/coverage2.xml
-  #           -Dsonar.python.flake8.reportPaths=report/flake8-report.txt
-  #           -Dsonar.exclusions=${{ env.SONAR_EXCLUSIONS }}
-  #           -X
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-  #         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          HUB_SHA=$(git -C openimis rev-parse --short HEAD)
+          MOD_SHA=$(git -C current-module rev-parse --short HEAD)
+          RESULT=$(grep -E '^(OK|FAILED)' test-output.txt 2>/dev/null | tail -1)
+          {
+            echo "### $MODULE_NAME module tests"
+            echo "- Hub: \`$HUB_REPOSITORY@$HUB_BRANCH\` ($HUB_SHA)"
+            echo "- Module: \`$GITHUB_REPOSITORY\` ($MOD_SHA)"
+            echo "- Tests ran: ${TESTS_RAN:-not reached}"
+            echo "- Result: ${RESULT:-no result line, see the log}"
+          } >> "$GITHUB_STEP_SUMMARY"

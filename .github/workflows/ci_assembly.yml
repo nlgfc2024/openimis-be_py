@@ -1,40 +1,26 @@
-name: Automated CI testing
-# This workflow run automatically for every commit on github it checks the syntax and launch the tests.
-# | grep . | uniq -c filters out empty lines and then groups consecutive lines together with the number of occurrences
+name: Malawi assembly tests
+# Installs this hub exactly as openimis.json pins it and runs every module's tests, one
+# module at a time, so one module's failures cannot hide or break another's. Runs on PRs
+# to this hub, nightly on mw/develop, and on demand. The job summary lists each module.
+#
+# Module repos do not run this: their PRs run only their own module's tests
+# (ci_module.yml). This run is the place to see the state of the whole assembly.
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  schedule:
+    - cron: '0 2 * * *'   # nightly, runs on the default branch (mw/develop)
   workflow_dispatch:
-    inputs:
-      comment:
-        description: Just a simple comment to know the purpose of the manual build
-        required: false
 
 jobs:
   ci_assembly:
-    runs-on: ubuntu-latest
-
+    name: Assembly tests (all modules)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
     services:
-      # mssql:
-      #   image: mcr.microsoft.com/mssql/server:2022-CU14-ubuntu-22.04
-      #   env:
-      #     ACCEPT_EULA: Y
-      #     SA_PASSWORD: YourStrong!Passw0rd
-      #   ports:
-      #     - 1433:1433
-      #   options:           
-      #      --health-interval=10s 
-      #      --health-interval=20s 
-      #      --health-timeout=3s 
-      #      --health-start-period=10s 
-      #      --health-retries=10 
-      #      --health-cmd="sqlcmd -S localhost -U sa -P ${SA_PASSWORD} -Q 'SELECT 1' || exit 1"
- 
       pgsql:
         image: ghcr.io/openimis/openimis-pgsql:develop
         env:
-          DB_HOST: localhost
-          DB_PORT: 5432
           POSTGRES_DB: test_imis
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: YourStrong!Passw0rd
@@ -60,146 +46,111 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
+    env:
+      SECRET_KEY: secret
+      MODE: DEV
+      DB_DEFAULT: postgresql
+      CELERY_BROKER_URL: "memory://openIMIS-test//"
+      CELERY_RESULT_BACKEND: "cache+memory://openIMIS-test//"
+      DB_HOST: localhost
+      DB_PORT: 5432
+      # Main and test database are the database the service creates; before this the
+      # main database "imis" did not exist and several modules failed to import.
+      DB_NAME: test_imis
+      DB_TEST_NAME: test_imis
+      DB_USER: postgres
+      DB_PASSWORD: YourStrong!Passw0rd
+      SITE_ROOT: api
+      OPENSEARCH_ADMIN: admin
+      OPENSEARCH_PASSWORD: B9wc9VrqX7pY
+      OPEN_SEARCH_HTTP_PORT: 9200
+      OPENSEARCH_HOSTS: "localhost:9200"
+      # Space-separated module names to leave out (repo variable); listed in the summary.
+      CI_EXCLUDED_MODULE: ${{ vars.CI_EXCLUDED_MODULE }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
-      - name: Cache dependencies
+      - name: Cache pip downloads
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-            ${{ runner.os }}-pip-
-            ${{ runner.os }}-
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt', 'openimis.json') }}
+          restore-keys: ${{ runner.os }}-pip-
 
-      - name: Install Python dependencies
+      - name: Install the assembly
         working-directory: ./script
         run: |
-          sudo apt-get update
-          sudo apt-get install jq
           python -m pip install --upgrade pip
           pip install -r ../requirements.txt
           python modules-requirements.py ../openimis.json > modules-requirements.txt
-          pip install --no-cache-dir -r modules-requirements.txt
-          export MODULES=$(jq -r '(.modules[].name)' openimis.json | xargs)
-          echo $modules
-
-      - name: Environment info
-        run: |
+          pip install -r modules-requirements.txt
           pip list
 
-      - name: Initialize PSQL
+      - name: Prepare PostgreSQL
         run: |
-          export DB_NAME_TEST="test_$DB_NAME"
-          if [ ${GITHUB_REF##*/} = "main" ]; then export DBBRANCH="main"; else export DBBRANCH="develop"; fi
-          echo "Branch ${GITHUB_REF##*/}, usign ${DBBRANCH} branch for database"
-          git clone  --depth=1 --branch=$DBBRANCH https://github.com/openimis/database_postgresql.git ./sql_psql
+          git clone --depth=1 --branch=develop https://github.com/openimis/database_postgresql.git ./sql_psql
           sudo bash ./sql_psql/install_postgres_json_schema_extension.sh
-          echo 'set search_path to public' >> ~/.psqlrc
-          PGPASSWORD=YourStrong!Passw0rd psql -U $DB_USER -h $DB_HOST -d $DB_NAME_TEST -f  ./sql_psql/database\ scripts/json_schema_extension.sql | grep . | uniq -c
-        env:
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_NAME: imis
-          DB_USER: postgres
-          DB_PASSWORD: YourStrong!Passw0rd
+          PGPASSWORD="$DB_PASSWORD" psql -U "$DB_USER" -h "$DB_HOST" -d "$DB_NAME" \
+            -f "./sql_psql/database scripts/json_schema_extension.sql" | grep . | uniq -c
 
-      # - name: Initialize MSSQL
-      #   run: |
-      #     export DB_NAME_TEST="test_$DB_NAME"
-          
-      #     if [ ${GITHUB_REF##*/} = "main" ]; then export DBBRANCH="main"; else export DBBRANCH="develop"; fi
-      #     echo "Branch ${GITHUB_REF##*/}, usign ${DBBRANCH} branch for database"
-      #     git clone --depth=1 --branch=$DBBRANCH https://github.com/openimis/database_ms_sqlserver.git ./sql_mssql
-      #     cd sql_mssql/ && bash concatenate_files.sh && cd ..
-
-      #     curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-      #     curl https://packages.microsoft.com/config/ubuntu/24.04/prod.list | sudo tee /etc/apt/sources.list.d/msprod.list
-      #     sudo apt-get update
-      #     sudo apt-get install -y --allow-downgrades --allow-remove-essential --allow-change-held-packages mssql-tools18 unixodbc-dev
-      #     echo "Waiting for SQL Server to be fully operational..."
-      #     until /opt/mssql-tools18/bin/sqlcmd -S localhost -U $DB_USER -P $DB_PASSWORD -Q "SELECT @@VERSION" > /dev/null 2>&1
-      #     do
-      #       echo "SQL Server is still initializing. Waiting..."
-      #       sleep 5
-      #     done
-      #     echo "SQL Server is now operational."
-      #     #Main db has to exists for tests to run correctly, psql container creates empty main db by default
-      #     /opt/mssql-tools18/bin/sqlcmd -S $DB_HOST -U $DB_USER -P $DB_PASSWORD -Q "DROP DATABASE IF EXISTS $DB_NAME"
-      #     /opt/mssql-tools18/bin/sqlcmd -S $DB_HOST -U $DB_USER -P $DB_PASSWORD -Q "CREATE DATABASE $DB_NAME"
-
-      #     /opt/mssql-tools18/bin/sqlcmd -S $DB_HOST -U $DB_USER -P $DB_PASSWORD -Q "DROP DATABASE IF EXISTS $DB_NAME_TEST"
-      #     /opt/mssql-tools18/bin/sqlcmd -S $DB_HOST -U $DB_USER -P $DB_PASSWORD -Q "CREATE DATABASE $DB_NAME_TEST"
-      #     /opt/mssql-tools18/bin/sqlcmd -S $DB_HOST -U $DB_USER -P $DB_PASSWORD -d $DB_NAME_TEST -i ./sql_mssql/output/fullDemoDatabase.sql | grep . | uniq -c
-      #   env:
-      #     DB_HOST: localhost
-      #     DB_PORT: 1433
-      #     DB_NAME: imis
-      #     DB_USER: sa
-      #     DB_PASSWORD: YourStrong!Passw0rd
-
-      - name: Django tests PSQL
+      - name: Migrate once and keep a template copy
         working-directory: ./openIMIS
-        # Run the tests regardless if previous steps failed (if setup fails the tests should crash instantly)
-        if: success() || failure()
         run: |
-          python -V
-          export MODULES=$(jq -r '(.modules[].name)' ../openimis.json | xargs)
-          MODULES=$(echo "$MODULES" | sed -E "s/\b$(echo "${CI_EXCLUDED_MODULE// /\\b|\\b}")\b/ /g" | xargs)
-          echo $MODULES
-          python manage.py test --keepdb $MODULES
-        env:
-          SECRET_KEY: secret
-          MODE: DEV
-          DB_DEFAULT: postgresql
-          CELERY_BROKER_URL: "memory://openIMIS-test//"
-          CELERY_RESULT_BACKEND: "cache+memory://openIMIS-test//"
-          #DJANGO_SETTINGS_MODULE: hat.settings
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_NAME: imis
-          DB_USER: postgres
-          DB_PASSWORD: YourStrong!Passw0rd
-          #DEV_SERVER: true
-          SITE_ROOT: api
-          CI_EXCLUDED_MODULE: ${{ vars.CI_EXCLUDED_MODULE }}
-          OPENSEARCH_ADMIN: admin
-          OPENSEARCH_PASSWORD: B9wc9VrqX7pY
-          OPEN_SEARCH_HTTP_PORT: 9200
-          OPENSEARCH_HOSTS: "localhost:9200"
+          python manage.py migrate --noinput
+          # Every module starts from this migrated database, so data one module's tests
+          # flush or leave behind cannot change another module's result.
+          PGPASSWORD="$DB_PASSWORD" createdb -h "$DB_HOST" -U "$DB_USER" -T "$DB_NAME" imis_template
 
-      # - name: Django tests MSSQL
-      #   working-directory: ./openIMIS
-      #   # Run the tests regardless if previous steps failed (if setup fails the tests should crash instantly)
-      #   if: success() || failure()
-      #   run: |
-      #     python -V
-      #     export MODULES=$(jq -r '(.modules[].name)' ../openimis.json | xargs)
-      #     MODULES=$(echo "$MODULES" | sed -E "s/\b$(echo "${CI_EXCLUDED_MODULE// /\\b|\\b}")\b/ /g" | xargs)
-      #     echo $MODULES
-      #     python manage.py test --debug-mode --timing --keepdb $MODULES
-      #   env:
-      #     SECRET_KEY: secret
-      #     MODE: DEV
-      #     DB_DEFAULT: mssql
-      #     CELERY_BROKER_URL: "memory://openIMIS-test//"
-      #     CELERY_RESULT_BACKEND: "cache+memory://openIMIS-test//"
-      #     #DJANGO_SETTINGS_MODULE: hat.settings
-      #     DB_HOST: localhost
-      #     DB_PORT: 1433
-      #     DB_NAME: imis
-      #     DB_USER: sa
-      #     DB_PASSWORD: YourStrong!Passw0rd
-      #     #DEV_SERVER: true
-      #     SITE_ROOT: api
-      #     #REMOTE_USER_AUTHENTICATION: False
-      #     CI_EXCLUDED_MODULE: ${{ vars.CI_EXCLUDED_MODULE }}
-      #     OPENSEARCH_DSL_AUTOSYNC: False
-      #     OPEN_SEARCH_HTTP_PORT: 9200
-      #     OPENSEARCH_HOSTS: "localhost:9200"
+      - name: Run each module's tests
+        working-directory: ./openIMIS
+        run: |
+          fresh_db() {
+            export PGPASSWORD="$DB_PASSWORD"
+            dropdb -h "$DB_HOST" -U "$DB_USER" --if-exists --force "$DB_NAME"
+            createdb -h "$DB_HOST" -U "$DB_USER" -T imis_template "$DB_NAME"
+          }
+          mkdir -p ../test-logs
+          printf '| Module | Tests | Result |\n|---|---|---|\n' > ../summary.md
+          FAILED=""
+          for MODULE in $(jq -r '.modules[].name' ../openimis.json); do
+            if [[ " $CI_EXCLUDED_MODULE " == *" $MODULE "* ]]; then
+              echo "| $MODULE | - | excluded (CI_EXCLUDED_MODULE) |" >> ../summary.md
+              continue
+            fi
+            echo "::group::$MODULE"
+            fresh_db
+            if python manage.py test --keepdb --noinput "$MODULE" > "../test-logs/$MODULE.txt" 2>&1; then STATUS=ok; else STATUS=failed; fi
+            tail -40 "../test-logs/$MODULE.txt"
+            echo "::endgroup::"
+            RAN=$(grep -oE '^Ran [0-9]+ tests?' "../test-logs/$MODULE.txt" | grep -oE '[0-9]+' | tail -1)
+            LINE=$(grep -E '^(OK|FAILED)' "../test-logs/$MODULE.txt" | tail -1)
+            if [[ "$STATUS" == ok ]]; then
+              echo "| $MODULE | ${RAN:-0} | ✅ ${LINE:-OK} |" >> ../summary.md
+            else
+              echo "| $MODULE | ${RAN:-0} | ❌ ${LINE:-did not finish, see log} |" >> ../summary.md
+              FAILED="$FAILED $MODULE"
+            fi
+          done
+          {
+            echo "### Assembly tests, one module at a time"
+            echo
+            cat ../summary.md
+            echo
+            echo "Failed:${FAILED:- none}"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [[ -n "$FAILED" ]]; then
+            echo "::error::Modules with failing tests:$FAILED"
+            exit 1
+          fi
+
+      - name: Upload per-module test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: assembly-test-logs
+          path: test-logs/

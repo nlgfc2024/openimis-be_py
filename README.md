@@ -70,6 +70,23 @@
 | RATELIMIT_SKIP_TIMEOUT | Boolean | Whether to skip rate limiting during cache timeout. Defaults to `False`. |
 | HOSTS | String | Define the trusted domains that are used for PROD CORS and CSRF protection, separated by commas. Defaults to `localhost, 192.168.0.1`. |
 
+## Malawi CI (nlgfc2024)
+
+Two workflows in this hub test the Malawi backend:
+
+- **`.github/workflows/ci_module.yml`** is a reusable workflow. Every `nlgfc2024/openimis-be-*_py`
+  module repo calls it from a short `ci.yml` (`uses: nlgfc2024/openimis-be_py/.github/workflows/ci_module.yml@mw/develop`).
+  On each module PR it installs this hub as `openimis.json` pins it (the hub branch named like the
+  PR base, else `mw/develop`; never upstream openIMIS), swaps in the module from the PR, and runs
+  that module's own tests on PostgreSQL. It fails if no tests ran. flake8 is shown in the job
+  summary but never fails the run. Fix CI for every module here, once.
+- **`.github/workflows/ci_assembly.yml`** runs every module's tests, one module at a time from a
+  freshly migrated database, on PRs to this hub, nightly on `mw/develop`, and on demand. The job
+  summary has a table of each module's result. To leave a module out, set the repo variable
+  `CI_EXCLUDED_MODULE` (space-separated names); excluded modules are listed in the summary.
+
+No secrets are needed. SonarCloud is not used.
+
 ## Developers setup
 
 ### To start working in openIMIS as a (module) developer:
