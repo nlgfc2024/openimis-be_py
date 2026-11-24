@@ -157,6 +157,10 @@
             "pip": "git+https://github.com/nlgfc2024/openimis-be-calcrule_timesheet_py.git@mw/develop#egg=openimis-be-calcrule_timesheet"
         },
         {
+            "name": "calcrule_attendance_grant",
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-calcrule_attendance_grant_py.git@mw/develop#egg=openimis-be-calcrule_attendance_grant"
+        },
+        {
             "name": "payroll",
             "pip": "git+https://github.com/nlgfc2024/openimis-be-payroll_py.git@mw/develop#egg=openimis-be-payroll"
         },
