@@ -110,7 +110,7 @@
         },
         {
             "name": "calcrule_validations",
-            "pip": "git+https://github.com/openimis/openimis-be-calcrule_validations_py.git@release/26.04#egg=openimis-be-calcrule_validations"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-calcrule_validations_py.git@mw/develop#egg=openimis-be-calcrule_validations"
         },
         {
             "name": "calcrule_contribution_income_percentage",
@@ -155,6 +155,10 @@
         {
             "name": "calcrule_timesheet",
             "pip": "git+https://github.com/nlgfc2024/openimis-be-calcrule_timesheet_py.git@26.11-uat.4#egg=openimis-be-calcrule_timesheet"
+        },
+        {
+            "name": "calcrule_attendance_grant",
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-calcrule_attendance_grant_py.git@mw/develop#egg=openimis-be-calcrule_attendance_grant"
         },
         {
             "name": "payroll",
