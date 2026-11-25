@@ -134,7 +134,7 @@
         },
         {
             "name": "enrolment",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-enrolment_py.git@26.11-uat.6#egg=openimis-be-enrolment"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-enrolment_py.git@26.11-umep-uat.4#egg=openimis-be-enrolment"
         },
         {
             "name": "project_social_protection",
@@ -187,6 +187,10 @@
         {
             "name": "household_validation",
             "pip": "git+https://github.com/nlgfc2024/openimis-be-household_validation_py.git@26.11-uat.6#egg=openimis-be-household_validation"
+        },
+        {
+            "name": "appraisal",
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-appraisal_py.git@26.11-umep-uat.4#egg=openimis-be-appraisal"
         }
     ]
 }
