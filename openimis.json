@@ -134,7 +134,7 @@
         },
         {
             "name": "enrolment",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-enrolment_py.git@24a83bebb52d4a3af33586f59d8299b1138ab8f5#egg=openimis-be-enrolment"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-enrolment_py.git@18decd7f2002ba03f4acd6464af42575125614f4#egg=openimis-be-enrolment"
         },
         {
             "name": "project_social_protection",
