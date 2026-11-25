@@ -110,7 +110,7 @@
         },
         {
             "name": "calcrule_validations",
-            "pip": "git+https://github.com/openimis/openimis-be-calcrule_validations_py.git@release/26.04#egg=openimis-be-calcrule_validations"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-calcrule_validations_py.git@4bb1c6221f28667ea03a5d7da1f4da456fa1c471#egg=openimis-be-calcrule_validations"
         },
         {
             "name": "calcrule_contribution_income_percentage",
@@ -134,7 +134,7 @@
         },
         {
             "name": "enrolment",
-            "pip": "git+https://github.com/nlgfc2024/openimis-be-enrolment_py.git@mw/develop#egg=openimis-be-enrolment"
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-enrolment_py.git@24a83bebb52d4a3af33586f59d8299b1138ab8f5#egg=openimis-be-enrolment"
         },
         {
             "name": "project_social_protection",
@@ -183,6 +183,10 @@
         {
             "name": "household_validation",
             "pip": "git+https://github.com/nlgfc2024/openimis-be-household_validation_py.git@mw/develop#egg=openimis-be-household_validation"
+        },
+        {
+            "name": "appraisal",
+            "pip": "git+https://github.com/nlgfc2024/openimis-be-appraisal_py.git@c01db0264c2b12f6220d31d5207a3cbc2dddec17#egg=openimis-be-appraisal"
         }
     ]
 }
